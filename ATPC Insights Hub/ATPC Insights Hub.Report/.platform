@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "ATPC Insights Hub"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "ef9fc029-76c3-4d1a-b5a1-5c0d780a86be"
+  }
+}

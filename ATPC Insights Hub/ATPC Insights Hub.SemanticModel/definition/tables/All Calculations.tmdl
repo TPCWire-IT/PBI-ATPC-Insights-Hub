@@ -1,0 +1,750 @@
+table 'All Calculations'
+	lineageTag: c469189c-c9ab-4dac-afca-828b4528bd11
+
+	measure 'Cum Revenue' =
+			
+			CALCULATE(SUM(FACT_Invoices[InvoiceTotal]),
+			FILTER( ALL(DIM_Date[Date]), DIM_Date[Date] <= MAX(DIM_Date[Date]))
+			)
+		lineageTag: 390f7a1a-d9d0-4849-babe-dd01c8d94aab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure PM% =
+			
+			IF(
+			
+			    ISBLANK(SUM(FACT_Invoices[InvoiceTotal])),BLANK(),
+			    DIVIDE(
+			        SUM(FACT_Invoices[GrossProfitAmount]),SUM(FACT_Invoices[InvoiceTotal])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: e1b8d21c-1ba7-4873-98dc-4951664a2f63
+
+	measure 'PY Orders' = ```
+			
+			CALCULATE(
+			    SUM(FACT_RecognizedOrders[OrderAmount]),
+			    SAMEPERIODLASTYEAR(DIM_Date[Date])
+			)
+			
+			```
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 9b7ba76c-d1b6-4b19-af96-2d768705878f
+
+	measure 'PY Revenue' =
+			
+			CALCULATE(SUM(FACT_Invoices[InvoiceTotal]),
+			SAMEPERIODLASTYEAR(DIM_Date[Date]))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 06b0e49d-82c3-41da-a3f7-4f2e8b646127
+
+	measure 'PY Profit' =
+			
+			CALCULATE(SUM(FACT_Invoices[GrossProfitAmount]),
+			SAMEPERIODLASTYEAR(DIM_Date[Date]))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 5e73f07f-8bea-44e8-a1dc-9435b5d26322
+
+	measure 'RT Orders' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			IF(MAX(Dim_Date[Date]) < TODAY(),
+					CALCULATE(SUM(FACT_RecognizedOrders[OrderAmount]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date]))),BLANK())
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: b3ae5077-17c3-4668-a937-79695a409b70
+
+	measure 'RT Revenue' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			IF(MAX(Dim_Date[Date]) < TODAY(),
+					CALCULATE(SUM(FACT_Invoices[InvoiceTotal]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date]))),BLANK())
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: dea4f62b-0619-4d15-b120-c95c8a19451f
+
+	measure 'SUM Budget Orders' = CALCULATE(SUM(FACT_Budgets[BudgetAmount]), FILTER(FACT_Budgets, FACT_Budgets[BudgetType] = "Orders"))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 49fc722c-8d04-4777-beea-20973950357f
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'RT Budget Revenue' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE([SUM Budget Revenue],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 8669f443-cbc0-48f3-b679-28ad6649d01b
+
+	measure 'SUM Budget Revenue' = CALCULATE(SUM(FACT_Budgets[BudgetAmount]), FILTER(FACT_Budgets, FACT_Budgets[BudgetType] = "Revenue"))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 0c4ca2d6-3ed6-42d5-a927-274fd4401c29
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'RT Budget Orders' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE([SUM Budget Orders],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 6f63b48e-9132-4b3a-9e47-255028bc5971
+
+	measure 'Count Orders' = DISTINCTCOUNT(FACT_RecognizedOrders[OrderNumber])
+		formatString: #,0
+		lineageTag: 34868234-38d5-48f0-bdbd-7b77adab95ad
+
+	measure 'AVG Order' = SUM(FACT_RecognizedOrders[OrderAmount]) / [Count Orders]
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: fbbc3559-7684-46d1-9d6c-9f6a7ddcde01
+
+	measure 'Book To Bill' = SUM(FACT_RecognizedOrders[OrderAmount]) / SUM(FACT_Invoices[InvoiceTotal])
+		formatString: 0.00
+		lineageTag: dc5a1106-6bb4-4058-9cef-a6abe02234bd
+
+	measure 'SUM Recognized Orders' = IF(ISBLANK(SUM(FACT_RecognizedOrders[OrderAmount])),0,SUM(FACT_RecognizedOrders[OrderAmount]))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 0a4f6713-55bd-430f-83d6-9e3a98296704
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'SUM Revenue' = IF(ISBLANK(SUM(FACT_Invoices[InvoiceTotal])),0,SUM(FACT_Invoices[InvoiceTotal]))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 5e2bf9bb-209b-4e12-b5ad-333ebbb950ac
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'RT Orders PY TD' =
+			
+			VAR MaxDate = IF(EOMONTH(TODAY(), 0) = EOMONTH(MAX(DIM_Date[Date]), 0), TODAY(), MAX(DIM_Date[Date]))
+			VAR MinDate = DATE(YEAR(MIN(DIM_Date[Date])), MONTH(MIN(DIM_Date[Date])), 1)
+			VAR YearCheck = YEAR(MAX(Dim_Date[Date]))/4
+			VAR LeapYear = IF(ROUNDUP(YearCheck,0)=YearCheck,TRUE,FALSE)
+			
+			RETURN
+			IF(YEAR(MAX(DIM_Date[Date])) = YEAR(MAX(DIM_Date[Today])) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31,
+			    CALCULATE(
+			        [SUM Recognized Orders],
+			        DIM_Date[Date] < DATE(YEAR(MAX(DIM_Date[Today])) - 1, MONTH(MAX(DIM_Date[Today])), DAY(MAX(DIM_Date[Today]))),
+			        DIM_Date[Date] >= DATE(YEAR(MinDate) - 1, MONTH(MinDate), 1)
+			    ),
+			    IF(YEAR(MAX(DIM_Date[Date])) < YEAR(MAX(DIM_Date[Today])) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31,
+			        [PY Orders],
+			        IF(MAX(DIM_Date[Date]) > MIN(DIM_Date[Today]) && EOMONTH(TODAY(), 0) < EOMONTH(MAX(DIM_Date[Date]), 0),
+			            0,
+			            IF(LeapYear=TRUE && MONTH(MAX(DIM_Date[Date])) = 2,
+			                IF(MAX(DIM_Date[Date]) < EOMONTH(MAX(DIM_Date[Today]), 0),
+			                    CALCULATE(
+			                        [SUM Recognized Orders],
+			                        DIM_Date[Date] <= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate) - 1),
+			                        DIM_Date[Date] >= DATE(YEAR(MinDate) - 1, MONTH(MinDate), 1)
+			                    ),
+			                    CALCULATE(
+			                        [SUM Recognized Orders],
+			                        DIM_Date[Date] < DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate) - 1),
+			                        DIM_Date[Date] >= DATE(YEAR(MinDate) - 1, MONTH(MinDate), 1)
+			                    )
+			                ),
+			                IF(MAX(DIM_Date[Date]) < EOMONTH(MAX(DIM_Date[Today]), 0),
+			                    CALCULATE(
+			                        [SUM Recognized Orders],
+			                        DIM_Date[Date] <= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate)),
+			                        DIM_Date[Date] >= DATE(YEAR(MinDate) - 1, MONTH(MinDate), 1)
+			                    ),
+			                    CALCULATE(
+			                        [SUM Recognized Orders],
+			                        DIM_Date[Date] < DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate)),
+			                        DIM_Date[Date] >= DATE(YEAR(MinDate) - 1, MONTH(MinDate), 1)
+			                    )
+			                )
+			            )
+			        )
+			    )
+			)
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: d0ccf8b2-6c38-4b8a-81da-3a2253bd7d91
+
+	measure 'RT Backlog' =
+			
+			CALCULATE(SUM(FACT_Backlog[BacklogAmount]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					TODAY(),
+					MAX(DIM_Date[Date])))
+		lineageTag: ab73af42-23e3-4890-b8ae-d761fe5869e0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SUM Backlog' = SUM(FACT_Backlog[BacklogAmount])
+		formatString: #,0
+		lineageTag: 748f662b-f79e-44b3-8f5a-45403819e986
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'REMAIN BookBill' = ```
+			
+			VAR CurrentDate = TODAY()
+			RETURN
+			IF(ISBLANK(SUMX(
+			    FILTER(
+			        FACT_BookBill,
+			        FACT_BookBill[ForecastDate] >= CurrentDate
+			    ),
+			    FACT_BookBill[InitialPredictionAmount]
+			    )),
+			    0,
+			    SUMX(
+			    FILTER(
+			        FACT_BookBill,
+			        FACT_BookBill[ForecastDate] >= CurrentDate
+			    ),
+			    FACT_BookBill[InitialPredictionAmount]
+			    )
+			)
+			
+			
+			```
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 42ab9392-26a2-4342-857e-c39d0e7417a3
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'REMAIN Backlog' =
+			
+			IF(ISBLANK(CALCULATE(SUM(FACT_Backlog[BacklogAmount]), FILTER(DIM_Date, DIM_Date[Date] >= TODAY()))),0,CALCULATE(SUM(FACT_Backlog[BacklogAmount]), FILTER(DIM_Date, DIM_Date[Date] >= TODAY())))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 5eccf0c0-2ef5-4015-9cf8-79fd2a2d13c5
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'REMAIN Backlog BookBill' = [REMAIN Backlog] + [REMAIN BookBill]
+		formatString: 0.00
+		lineageTag: bea55ef7-5a24-497c-bebe-ceedf52c9782
+
+	measure 'RT REMAIN Backlog BookBill' = CALCULATE([REMAIN Backlog BookBill], DATESBETWEEN(DIM_Date[Date], TODAY(), MAX(DIM_Date[Date])))
+		lineageTag: a1282f0a-5314-482e-9279-ab1c21d68406
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SUM Revenue Forecast' =
+			
+			[SUM Revenue] + [REMAIN Backlog] + [REMAIN BookBill]
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: c7eae99e-1b77-4efa-8ae2-4c709da2ea6e
+
+	measure 'RT Revenue Forecast' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE([SUM Revenue Forecast],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: fbd5d15c-c4e1-4c69-b31e-1d336e82a861
+
+	measure ColWidth = "0000000000"
+		lineageTag: 770725d4-a094-4551-b700-8b908e16301a
+
+	measure 'SUM Budget Orders RND' = CALCULATE(SUM(FACT_Budgets[BudgetAmount]), FILTER(FACT_Budgets, FACT_Budgets[BudgetType] = "Orders"))
+		formatString: #,0
+		lineageTag: 5bf735f9-37c0-4408-9802-1b7c618f3b0d
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'RT Budget Revenue TD' =
+			
+			VAR MaxDate = IF(MAX(DIM_Date[Date]) < TODAY(), MAX(DIM_Date[Date]), TODAY())
+			
+			RETURN
+			CALCULATE([SUM Budget Revenue],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MIN(DIM_Date[Date]),
+					MaxDate - 1))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 4578fd40-7328-4202-adee-bd294809a189
+
+	measure 'RT Budget Orders TD' =
+			
+			VAR MaxDate = IF(MAX(DIM_Date[Date]) < TODAY(), MAX(DIM_Date[Date]), TODAY())
+			
+			RETURN
+			CALCULATE([SUM Budget Orders],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MIN(DIM_Date[Date]),
+					MaxDate - 1))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 6865ca36-1575-4bd4-9d07-7b9bf5e2f250
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'VAR Orders Vs Budget TD' = IFERROR(IF(ISBLANK([RT Budget Orders TD]), BLANK(), SUM(FACT_RecognizedOrders[OrderAmount]) / [RT Budget Orders TD]),BLANK())
+		formatString: 0%;-0%;0%
+		lineageTag: 29e439ec-0619-4896-8589-e297fe4be6f2
+
+	measure 'RT Backlog Past Due' =
+			
+			CALCULATE([SUM Backlog],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MIN(DIM_Date[Date]),
+					TODAY()-1))
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: f5716419-2eb6-4b48-86e4-b65d0e16a0ae
+
+	measure 'SUM Profit' = IF(ISBLANK(SUM(FACT_Invoices[GrossProfitAmount])),0,SUM(FACT_Invoices[GrossProfitAmount]))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 1c6b39cc-76ba-4b11-8595-9124d62e3b21
+
+	measure 'RT Revenue PY TD' =
+			
+			VAR MaxDate = IF(EOMONTH(TODAY(), 0) = EOMONTH(MAX(DIM_Date[Date]), 0), TODAY(), MAX(DIM_Date[Date]))
+			VAR YearCheck = YEAR(MAX(Dim_Date[Date]))/4
+			VAR LeapYear = IF(ROUNDUP(YearCheck,0)=YearCheck,TRUE,FALSE)
+			
+			RETURN
+			IF(YEAR(MAX(DIM_Date[Date])) = YEAR(MAX(DIM_Date[Today])) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31,
+			    CALCULATE(
+			        [SUM Revenue],
+			        DIM_Date[Date] < DATE(YEAR(MAX(DIM_Date[Today])) - 1, MONTH(MAX(DIM_Date[Today])), DAY(MAX(DIM_Date[Today]))),
+			        DIM_Date[Date] >= DATE(YEAR(MAX(DIM_Date[Today])) - 1, MONTH(MAX(DIM_Date[Today])), 1)
+			    ),
+			    IF(YEAR(MAX(DIM_Date[Date])) < YEAR(MAX(DIM_Date[Today])) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31,
+			        [PY Revenue],
+			        IF(MAX(DIM_Date[Date]) > MIN(DIM_Date[Today]) && EOMONTH(TODAY(), 0) < EOMONTH(MAX(DIM_Date[Date]), 0),
+			            0,
+			            IF(LeapYear=TRUE && MONTH(MAX(DIM_Date[Date])) = 2,
+			                IF(MAX(DIM_Date[Date]) < EOMONTH(MAX(DIM_Date[Today]), 0),
+			                    CALCULATE(
+			                        [SUM Revenue],
+			                        DIM_Date[Date] <= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate) - 1),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    ),
+			                    CALCULATE(
+			                        [SUM Revenue],
+			                        DIM_Date[Date] < DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate) - 1),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    )
+			                ),
+			                IF(MAX(DIM_Date[Date]) < EOMONTH(MAX(DIM_Date[Today]), 0),
+			                    CALCULATE(
+			                        [SUM Revenue],
+			                        DIM_Date[Date] <= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate)),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    ),
+			                    CALCULATE(
+			                        [SUM Revenue],
+			                        DIM_Date[Date] < DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate)),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    )
+			                )
+			            )
+			        )
+			    )
+			)
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: 87537022-ba42-4943-99f5-820fe405d10f
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'VAR Orders Vs BPC Forecast TD' = IFERROR(IF(ISBLANK([RT BPC Orders FCT TD]), BLANK(), SUM(FACT_RecognizedOrders[OrderAmount]) / [RT BPC Orders FCT TD]),BLANK())
+		formatString: 0%;-0%;0%
+		lineageTag: 3eacc4cb-52ff-444b-936c-15d9edaa5310
+
+	measure 'RT BPC Orders FCT TD' =
+			
+			VAR MaxDate = IF(MAX(DIM_Date[Date]) < TODAY(), MAX(DIM_Date[Date]), TODAY())
+			
+			RETURN
+			CALCULATE([SUM BPC Orders FCT],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MIN(DIM_Date[Date]),
+					MaxDate - 1))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 7c6b7128-f005-4002-a52b-62b423dbbbbd
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'SUM BPC Orders FCT' =
+			
+			CALCULATE(SUM(FACT_BPCForecasts[ForecastAmount]), FILTER(FACT_BPCForecasts, FACT_BPCForecasts[ForecastType] = "ORDERS"))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: a2cc802a-2a82-4930-890d-063dc4a13cd7
+
+	measure 'SUM BPC Revenue FCT' =
+			
+			CALCULATE(SUM(FACT_BPCForecasts[ForecastAmount]), FILTER(FACT_BPCForecasts, FACT_BPCForecasts[ForecastType] = "REVENUE"))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 4e1d0256-6f8d-4926-81a6-394cc6f6fdf6
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'RT BPC Orders FCT' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE([SUM BPC Orders FCT],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 67cda7f9-2246-424b-96b7-83870e6cb618
+
+	measure Measure
+		lineageTag: 7cdb982c-be1f-4a98-b43a-7fcf9d9d6f82
+
+		annotation 43dbc3e8-3a1c-4b6f-9923-b49ff7d6691c = True
+
+	measure 'RT Orders PY' =
+			
+			CALCULATE([PY Orders],
+			    	SAMEPERIODLASTYEAR(DIM_Date[Date]))
+		lineageTag: 8a366bcf-7b54-45c7-bfbf-c568eea3cd9c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'RT BPC Revenue FCT TD' =
+			
+			VAR MaxDate = IF(MAX(DIM_Date[Date]) < TODAY(), MAX(DIM_Date[Date]), TODAY())
+			
+			RETURN
+			CALCULATE([SUM BPC Revenue FCT],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MIN(DIM_Date[Date]),
+					MaxDate - 1))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: ff2a2f6d-a3bc-4609-8929-e60781e2b824
+
+	measure 'RT BPC Revenue FCT' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE([SUM BPC Revenue FCT],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 7d5998e8-183d-42ab-8a4d-5cb06886f868
+
+	measure 'VAR Revenue Vs Budget TD' = IFERROR(IF(ISBLANK([RT Budget Revenue TD]), BLANK(), SUM(FACT_Invoices[InvoiceTotal]) / [RT Budget Revenue TD]),BLANK())
+		formatString: 0%;-0%;0%
+		lineageTag: 54b0b6c4-510b-4621-9bfb-c20e5445a641
+
+	measure 'VAR Revenue Vs BPC Forecast TD' = IFERROR(IF(ISBLANK([RT BPC Revenue FCT TD]), BLANK(), SUM(FACT_Invoices[InvoiceTotal]) / [RT BPC Revenue FCT TD]), BLANK())
+		formatString: 0%;-0%;0%
+		lineageTag: 158236e1-4214-4d4b-8404-144121a8ce64
+
+	measure 'COUNT Workdays' = CALCULATE(COUNT(DIM_Date[DateKey]), FILTER(DIM_Date, DIM_Date[IsWorkdayUSA]=TRUE()))
+		formatString: 0
+		lineageTag: 683948b5-ac01-40f3-a352-35b31d4a415c
+
+	measure 'RT Workdays' =
+			
+			IF(
+			    ISBLANK(
+			        IF(MAX(DIM_Date[Date]) < DATE(YEAR(TODAY()), MONTH(TODAY()), 1),
+			            [COUNT Workdays],
+			            IF((YEAR(MAX(DIM_Date[Date])) = YEAR(TODAY()) && MONTH(MAX(DIM_Date[Date])) = MONTH(TODAY())) || (YEAR(MAX(DIM_Date[Date])) = YEAR(TODAY()) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31),
+			                CALCULATE([COUNT Workdays],
+			                    DATESBETWEEN(DIM_Date[Date],
+			                    MIN(DIM_Date[Date]),
+			                    TODAY() - 1)
+			                ),
+			                0
+			            )
+			        )
+			    ),
+			    0,
+			    IF(MAX(DIM_Date[Date]) < DATE(YEAR(TODAY()), MONTH(TODAY()), 1),
+			        [COUNT Workdays],
+			        IF((YEAR(MAX(DIM_Date[Date])) = YEAR(TODAY()) && MONTH(MAX(DIM_Date[Date])) = MONTH(TODAY())) || (YEAR(MAX(DIM_Date[Date])) = YEAR(TODAY()) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31),
+			            CALCULATE([COUNT Workdays],
+			                DATESBETWEEN(DIM_Date[Date],
+			                MIN(DIM_Date[Date]),
+			                TODAY() - 1)
+			            ),
+			            0
+			        )
+			    )
+			)
+		formatString: 0
+		lineageTag: 75bef4d1-68b5-4825-96cf-471ca0c59fa7
+
+	measure 'SUM Budget Cost' = CALCULATE(SUM(FACT_Budgets[BudgetAmount]), FILTER(FACT_Budgets, FACT_Budgets[BudgetType] = "Cost"))
+		lineageTag: 95166549-a228-485f-bea3-f43a4397e9a3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'RT Budget Margin TD' =
+			
+			VAR MaxDate = IF(MAX(DIM_Date[Date]) < TODAY(), MAX(DIM_Date[Date]), TODAY())
+			
+			RETURN
+			CALCULATE(DIVIDE(([SUM Budget Revenue] - [SUM Budget Cost]), [SUM Budget Revenue]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					MIN(DIM_Date[Date]),
+					MaxDate))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: c96ee63d-0cc9-492b-9c13-d3a1fb7d47ad
+
+	measure 'RT Budget Margin' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE(DIVIDE(([SUM Budget Revenue] - [SUM Budget Cost]), [SUM Budget Revenue]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: #,0.00%;-#,0.00%;#,0.00%
+		lineageTag: db999e32-f23f-4aea-bbb5-4fbf31d869c8
+
+	measure 'RT Margin' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE(DIVIDE([RT Profit], [RT Revenue]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: b8d430d5-bf99-4a56-99dc-16de41396a76
+
+	measure 'RT Profit PY TD' =
+			
+			VAR MaxDate = IF(EOMONTH(TODAY(), 0) = EOMONTH(MAX(DIM_Date[Date]), 0), TODAY(), MAX(DIM_Date[Date]))
+			VAR YearCheck = YEAR(MAX(Dim_Date[Date]))/4
+			VAR LeapYear = IF(ROUNDUP(YearCheck,0)=YearCheck,TRUE,FALSE)
+			
+			RETURN
+			IF(YEAR(MAX(DIM_Date[Date])) = YEAR(MAX(DIM_Date[Today])) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31,
+			    CALCULATE(
+			        [SUM Profit],
+			        DIM_Date[Date] < DATE(YEAR(MAX(DIM_Date[Today])) - 1, MONTH(MAX(DIM_Date[Today])), DAY(MAX(DIM_Date[Today]))),
+			        DIM_Date[Date] >= DATE(YEAR(MAX(DIM_Date[Today])) - 1, MONTH(MAX(DIM_Date[Today])), 1)
+			    ),
+			    IF(YEAR(MAX(DIM_Date[Date])) < YEAR(MAX(DIM_Date[Today])) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31,
+			        [PY Profit],
+			        IF(MAX(DIM_Date[Date]) > MIN(DIM_Date[Today]) && EOMONTH(TODAY(), 0) < EOMONTH(MAX(DIM_Date[Date]), 0),
+			            0,
+			            IF(LeapYear=TRUE && MONTH(MAX(DIM_Date[Date])) = 2,
+			                IF(MAX(DIM_Date[Date]) < EOMONTH(MAX(DIM_Date[Today]), 0),
+			                    CALCULATE(
+			                        [SUM Profit],
+			                        DIM_Date[Date] <= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate) - 1),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    ),
+			                    CALCULATE(
+			                        [SUM Profit],
+			                        DIM_Date[Date] < DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate) - 1),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    )
+			                ),
+			                IF(MAX(DIM_Date[Date]) < EOMONTH(MAX(DIM_Date[Today]), 0),
+			                    CALCULATE(
+			                        [SUM Profit],
+			                        DIM_Date[Date] <= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate)),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    ),
+			                    CALCULATE(
+			                        [SUM Profit],
+			                        DIM_Date[Date] < DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), DAY(MaxDate)),
+			                        DIM_Date[Date] >= DATE(YEAR(MaxDate) - 1, MONTH(MaxDate), 1)
+			                    )
+			                )
+			            )
+			        )
+			    )
+			)
+		formatString: \$#,0.###############;(\$#,0.###############);\$#,0.###############
+		lineageTag: 022784a9-a62e-4a30-8d92-2ba5213d6038
+
+	measure 'RT Margin PY TD' =
+			
+			IF(ISBLANK([RT Revenue PY TD]), 0, DIVIDE([RT Profit PY TD], [RT Revenue PY TD]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a2891636-d5d3-433b-b879-3fbb98ada2fc
+
+	measure 'RT Margin PY' =
+			
+			CALCULATE([PY Margin],
+			    	SAMEPERIODLASTYEAR(DIM_Date[Date]))
+		lineageTag: e5142914-b510-4ece-b47f-19ce55ce5d3a
+
+	measure 'PY Margin' = DIVIDE([PY Profit], [PY Revenue])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: ca1114f7-5ae3-4dcf-8715-675f4532be6a
+
+	measure 'SUM Cost' = SUM(FACT_Invoices[ExtendedCostTotal])
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 9c60c02d-8366-42a1-acdd-143155ce65e3
+
+	measure 'VAR Margin Vs Budget TD' = IFERROR(IF(ISBLANK([RT Budget Margin TD]), BLANK(), [PM%] - [RT Budget Margin TD]),BLANK())
+		lineageTag: af09ed0d-f610-42ba-8cb7-ffb57f8b5f9f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SUM Budget Margin' = DIVIDE(([SUM Budget Revenue] - [SUM Budget Cost]), [SUM Budget Revenue])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 08e229f3-b30d-408e-96f5-ba7a62faea24
+
+	measure 'RT Margin TD' =
+			
+			IF((YEAR(TODAY()) = YEAR(MAX(DIM_Date[Date])) && MONTH(MAX(DIM_Date[Date])) = 12 && DAY(MAX(DIM_Date[Date])) = 31) || (YEAR(TODAY()) = YEAR(MAX(DIM_Date[Date])) && MONTH(TODAY()) = MONTH(MAX(DIM_Date[Date]))),
+			    CALCULATE([RT Margin], FILTER(DIM_Date, DIM_Date[Date] < TODAY())),
+			    [RT Margin])
+		lineageTag: 2d3bcf92-35c8-4e83-a4a7-45f54471ba53
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'RT Profit' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			IF(MAX(Dim_Date[Date]) < TODAY(),
+					CALCULATE(SUM(FACT_Invoices[GrossProfitAmount]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date]))),BLANK())
+		lineageTag: 03f1f762-7ee5-4061-889f-40f17fe3c936
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'TEXT Month' =
+			
+			IF(MAX(DIM_Date[Month]) = 1, "January",
+			    IF(MAX(DIM_Date[Month]) = 2, "February",
+			    IF(MAX(DIM_Date[Month]) = 3, "March",
+			    IF(MAX(DIM_Date[Month]) = 4, "April",
+			    IF(MAX(DIM_Date[Month]) = 5, "May",
+			    IF(MAX(DIM_Date[Month]) = 6, "June",
+			    IF(MAX(DIM_Date[Month]) = 7, "July",
+			    IF(MAX(DIM_Date[Month]) = 8, "August",
+			    IF(MAX(DIM_Date[Month]) = 9, "September",
+			    IF(MAX(DIM_Date[Month]) = 10, "October",
+			    IF(MAX(DIM_Date[Month]) = 11, "November",
+			    "December")))))))))))
+		lineageTag: ba48084b-5ce7-4115-a736-82703f52ffb6
+
+	measure 'TEXT Year' = MAX(DIM_Date[Year])
+		formatString: 0
+		lineageTag: 46f1d7f1-cca7-45a6-a248-30f9d900547d
+
+	measure 'TEXT Sales Team' =
+			
+			IF(DISTINCTCOUNT(DIM_SalesTeam[SalesTeam]) > 1, "multiple sales teams", MAX(DIM_SalesTeam[SalesTeam]))
+		lineageTag: f476457e-37c3-47a9-acf6-c98b3a620de5
+
+	measure 'TEXT Filters' = "Based on selected filters, visualizations reflect data through to the end of " & FORMAT(MAX(DIM_Date[Date]), "MMMM YYYY") & ", for " & [TEXT Sales Team] & "."
+		lineageTag: 2497119b-7461-4d56-a67e-254c565c7b5d
+
+	measure 'RT Margin 2' = [RT Profit] / [RT Revenue]
+		lineageTag: 1ac00a7e-f298-45c6-9e9d-22d1007a251d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'PROGRESS To Budget Revenue' = [SUM Revenue Forecast] / [SUM Budget Revenue]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 5c384826-aaeb-4807-a228-181349ce40d6
+
+	measure 'PROGRESS To APH Forecast Revenue' = [SUM Revenue Forecast] / [SUM BPC Revenue FCT]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: b3c959ed-6942-4aa0-b408-bbddb46b937e
+
+	measure 'PROGRESS To Budget Orders' = [SUM Recognized Orders] / [RT Budget Orders]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 312796c7-2d96-43ee-9cf3-6e05544ed850
+
+	measure 'PROGRESS To APH Forecast Orders' = [SUM Recognized Orders] / [RT BPC Orders FCT]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 492262f1-3c63-40a1-878e-2acea3e928f1
+
+	measure 'SUM Entered Orders' = IF(ISBLANK(SUM(FACT_EnteredOrders[OrderAmount])),0,SUM(FACT_EnteredOrders[OrderAmount]))
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: d95223e0-35f1-4851-b155-b25cad3c0316
+
+	measure 'RT Budget Cost' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			CALCULATE([SUM Budget Cost],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date])))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 7510df57-6eb4-4c62-9521-381e2f47a11e
+
+	measure 'RT Cost' =
+			
+			VAR MinDate = CALCULATE(MIN(DIM_Date[Date]),ALLSELECTED(Dim_Date))
+			
+			RETURN
+			IF(MAX(Dim_Date[Date]) < TODAY(),
+					CALCULATE(SUM(FACT_Invoices[ExtendedCostTotal]),
+			    	DATESBETWEEN(DIM_Date[Date],
+					MinDate,
+					MAX(DIM_Date[Date]))),BLANK())
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 9cf40e8c-dfd7-41f2-966a-bed063062e7f
+
+	measure 'RT Budget Cost TD' =
+			
+			VAR MaxDate = IF(MAX(DIM_Date[Date]) < TODAY(), MAX(DIM_Date[Date]), TODAY())
+			
+			RETURN
+			CALCULATE([SUM Budget Cost],
+			    	DATESBETWEEN(DIM_Date[Date],
+					MIN(DIM_Date[Date]),
+					MaxDate - 1))
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 163bc65f-69b5-4b0f-afaa-bed1290d311d
+
+	measure 'PROGRESS To Budget Cost' = [PM%] - [RT Budget Margin TD]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fcbec43b-4298-49b1-8451-0729efc33f7d
+
+	measure 'PROGRESS To PY TD Orders' = [SUM Recognized Orders] / [RT Orders PY TD]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 04077181-13fd-4cb5-8963-a393bba84437
+
+	measure 'PROGRESS To PY Revenue' = [SUM Revenue Forecast] / [PY Revenue]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 93dfd22a-dfb6-4dae-90b8-592b4016cda5
+
+	column Value
+		isHidden
+		formatString: 0
+		lineageTag: da7f8626-2791-40ad-b830-355ffcde7de1
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'All Calculations' = calculated
+		mode: import
+		source = {BLANK()}
+
+	annotation PBI_Id = c33a667dad4144118b23e800105e3b99
+

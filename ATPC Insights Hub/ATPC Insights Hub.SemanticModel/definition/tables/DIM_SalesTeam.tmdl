@@ -1,0 +1,59 @@
+table DIM_SalesTeam
+	lineageTag: 66d489be-ac82-44d2-bae4-b4f0a4a565a8
+
+	column SalesTeamKey
+		dataType: string
+		lineageTag: 31e6fa94-c6da-42a3-b185-4c6447429cb9
+		summarizeBy: none
+		sourceColumn: SalesTeamKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column SalesTeam
+		dataType: string
+		lineageTag: 2d37d9a5-a8d1-4ecb-b97c-400ecc509499
+		summarizeBy: none
+		sourceColumn: SalesTeam
+		sortByColumn: SalesTeamOrder
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column SalesGroup
+		dataType: string
+		lineageTag: 7f2f1e40-de3d-4e24-9ad5-6d40612f874f
+		summarizeBy: none
+		sourceColumn: SalesGroup
+
+		annotation SummarizationSetBy = Automatic
+
+	column SalesTeamOrder =
+			IF(DIM_SalesTeam[SalesTeamKey] = "a1be1f1eec0af2353d241838cc365eff", 1,
+			            IF(DIM_SalesTeam[SalesTeamKey] = "fccd89e952843b8539ecabedc0aef928", 2,
+			                IF(DIM_SalesTeam[SalesTeamKey] = "dde1c6a4219d5ef6b6d457a2e54b4873", 3,
+			                    IF(DIM_SalesTeam[SalesTeamKey] = "11349a86c7b11162873efe3b65485e0c", 4,
+			                        IF(DIM_SalesTeam[SalesTeamKey] = "cc4bc7494b115124784f3551ad282259", 5,
+			                            IF(DIM_SalesTeam[SalesTeamKey] = "1580b9a7935cf004f33d0ba96765e832", 6,
+			                                IF(DIM_SalesTeam[SalesTeamKey] = "INTRACO", 7,
+			                                    IF(DIM_SalesTeam[SalesTeamKey] = "764bf8a9f34d2f08b5df9c7e91d492b9", 8,
+			                                        IF(DIM_SalesTeam[SalesTeamKey] = "005d825538bf549e1f99f18d35d7e0fb", 9, 10)))))))))
+		formatString: 0
+		lineageTag: 7c58bf72-dc21-4274-a6dd-d3b80d201ff3
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DIM_SalesTeam = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("atpc-dwh-db1.tpcwire.com", "ODIN-Production"),
+				    MIMIR_DIM_SalesTeam = Source{[Schema="MIMIR",Item="DIM_SalesTeam"]}[Data]
+				in
+				    MIMIR_DIM_SalesTeam
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
